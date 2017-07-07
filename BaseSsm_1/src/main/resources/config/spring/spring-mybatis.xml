@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/aop 
+           http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+           http://www.springframework.org/schema/tx
+     	   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-3.0.xsd"> 
+    <!-- 自动扫描 -->  
+    <context:component-scan base-package="com.hbst.basessm_1" />  
+    <!-- proxy-target-class="true"强制使用CGLib代理，为false则spring会自动选择 -->
+	<aop:aspectj-autoproxy proxy-target-class="true" />
+	
+	 <!-- 引入jdbc配置文件 -->
+	<context:property-placeholder location="classpath:config/jdbc/jdbc.properties" />
+  
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"  
+        destroy-method="close">  
+        <property name="driverClassName" value="${jdbc.driverClassName}" />  
+        <property name="url" value="${jdbc.url}" />  
+        <property name="username" value="${jdbc.username}" />  
+        <property name="password" value="${jdbc.password}" />  
+        <!-- 队列中的最小等待数 -->
+		<property name="minIdle" value="${jdbc.minIdle}"></property>
+		<!-- 队列中的最大等待数 -->
+		<property name="maxIdle" value="${jdbc.maxIdle}"></property>
+		<!-- 最长等待时间，单位毫秒 -->
+		<property name="maxWait" value="${jdbc.maxWait}"></property>
+		<!-- 最大活跃数 -->
+		<property name="maxActive" value="${jdbc.maxActive}"></property>
+		<property name="initialSize" value="${jdbc.initialSize}"></property>
+		<property name="testWhileIdle" value="${jdbc.testWhileIdle}"></property>
+		<property name="testOnBorrow" value="${jdbc.testOnBorrow}"></property>
+		<property name="testOnReturn" value="${jdbc.testOnReturn}"></property>
+		<property name="validationQuery" value="${jdbc.validationQuery}" />
+		<property name="validationQueryTimeout" value="${jdbc.validationQueryTimeout}"></property>
+		<property name="timeBetweenEvictionRunsMillis" value="${jdbc.timeBetweenEvictionRunsMillis}"></property>
+		<property name="numTestsPerEvictionRun" value="${jdbc.numTestsPerEvictionRun}"></property>  
+    </bean>  
+  
+  <!-- 配置MyBitas SqlSessionFactoryBean -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="configLocation" value="classpath:config/mybatis/typeAliasMapper.xml" />
+		<property name="mapperLocations"
+			value="classpath:config/mybatis/mappers/*/*Mapper.xml" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+		<!-- 配置SqlSessionTemplate -->
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate"
+		scope="prototype">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+<!--     spring和MyBatis完美整合，不需要mybatis的配置映射文件   -->
+<!--     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">   -->
+<!--         <property name="dataSource" ref="dataSource" />   -->
+<!--         自动扫描mapping.xml文件   -->
+<!--         <property name="mapperLocations" value="classpath:com/cn/hnust/mapping/*.xml"></property>   -->
+<!--     </bean>   -->
+  
+<!--     DAO接口所在包名，Spring会自动查找其下的类   -->
+<!--     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">   -->
+<!--         <property name="basePackage" value="com.cn.hnust.dao" />   -->
+<!--         <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>   -->
+<!--     </bean>   -->
+  
+    <!-- (事务管理)transaction manager, use JtaTransactionManager for global tx -->  
+    <bean id="transactionManager"  
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">  
+        <property name="dataSource" ref="dataSource" />  
+    </bean>  
+  
+  		<!-- 使用注解的方式配置事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+</beans>  
